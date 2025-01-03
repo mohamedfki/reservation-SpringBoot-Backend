@@ -6,16 +6,18 @@ public class DeviceDto {
     private String name;
     private String serialNumber; 
     private Long departmentId;   
+    private String imageUrl;
 
     // Constructors
     public DeviceDto() {}
 
-    public DeviceDto(Long id, String name, String serialNumber, Long departmentId) {
+    public DeviceDto(Long id, String name, String serialNumber, Long departmentId,String imageUrl) {
         this.id = id;
         this.name = name;
         this.serialNumber = serialNumber;
         
         this.departmentId = departmentId;
+        this.imageUrl =imageUrl;
     }
 
     // Getters and Setters
@@ -51,4 +53,13 @@ public class DeviceDto {
     public void setDepartmentId(Long departmentId) {
         this.departmentId = departmentId;
     }
+   
+
+public String getImageUrl() {
+    return imageUrl;
+}
+
+public void setImageUrl(String imageUrl) {
+    this.imageUrl = imageUrl;
+}
 }

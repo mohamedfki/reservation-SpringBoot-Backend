@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -26,24 +27,31 @@ public class DeviceController {
         return deviceService.getDeviceById(id);
     }
 
-    @PostMapping()
-    public ResponseEntity<DeviceDto> createDevice(@RequestBody DeviceDto deviceDto) {
-        // Check if the ID is provided (it should not be)
+    @PostMapping
+    public ResponseEntity<DeviceDto> createDevice(
+        @RequestPart("device") DeviceDto deviceDto,
+        @RequestPart(value = "image", required = false) MultipartFile imageFile
+    ) {
         if (deviceDto.getId() != null) {
             throw new IllegalArgumentException("ID should not be provided during creation.");
         }
-    
-        // Validate if departmentId is provided (add this validation)
+
         if (deviceDto.getDepartmentId() == null) {
             throw new IllegalArgumentException("Department ID must be provided.");
         }
-    
-        // Create device logic here...
-        DeviceDto createdDevice = deviceService.createDevice(deviceDto);
-    
-        // Return the created device with the HTTP Status CREATED
+
+        DeviceDto createdDevice = deviceService.createDevice(deviceDto, imageFile);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdDevice);
-    
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<DeviceDto> updateDevice(
+        @PathVariable Long id,
+        @RequestPart("device") DeviceDto deviceDto,
+        @RequestPart(value = "image", required = false) MultipartFile imageFile
+    ) {
+        DeviceDto updatedDevice = deviceService.updateDevice(id, deviceDto, imageFile);
+        return ResponseEntity.ok(updatedDevice);
     }
 
     @DeleteMapping("/{id}")
@@ -51,12 +59,4 @@ public class DeviceController {
         deviceService.deleteDevice(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
-    @PutMapping("/{id}")
-public ResponseEntity<DeviceDto> updateDevice(@PathVariable Long id, @RequestBody DeviceDto deviceDto) {
-    // Validate the request and update the device
-    DeviceDto updatedDevice = deviceService.updateDevice(id, deviceDto);
-
-    // Return the updated device with HTTP status OK
-    return ResponseEntity.ok(updatedDevice);
-}
 }

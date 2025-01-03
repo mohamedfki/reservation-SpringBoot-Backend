@@ -8,13 +8,20 @@ import com.example.backend.repository.DepartmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class DeviceService {
+
+    private static final String UPLOAD_DIR = "uploads/";
 
     @Autowired
     private DeviceRepository deviceRepository;
@@ -26,7 +33,7 @@ public class DeviceService {
     public List<DeviceDto> getAllDevices() {
         List<Device> devices = deviceRepository.findAll();
         return devices.stream()
-                .map(device -> convertToDto(device))
+                .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
@@ -39,16 +46,49 @@ public class DeviceService {
 
     @Transactional
     // Create a new device
-    public DeviceDto createDevice(DeviceDto deviceDto) {
+    public DeviceDto createDevice(DeviceDto deviceDto, MultipartFile imageFile) {
+        // Check if the department exists
         Department department = departmentRepository.findById(deviceDto.getDepartmentId())
                 .orElseThrow(() -> new RuntimeException("Department not found"));
 
+        // Save image if provided
+        String imageUrl = null;
+        if (imageFile != null && !imageFile.isEmpty()) {
+            imageUrl = saveImage(imageFile);
+        }
+
+        // Create and save the device
         Device device = new Device();
         device.setName(deviceDto.getName());
         device.setSerialNumber(deviceDto.getSerialNumber());
         device.setDepartment(department);
+        device.setImageUrl(imageUrl);
 
-        // Save and return the created device as DTO
+        device = deviceRepository.save(device);
+        return convertToDto(device);
+    }
+
+    @Transactional
+    // Update a device
+    public DeviceDto updateDevice(Long id, DeviceDto deviceDto, MultipartFile imageFile) {
+        Device device = deviceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Device not found"));
+
+        Department department = departmentRepository.findById(deviceDto.getDepartmentId())
+                .orElseThrow(() -> new RuntimeException("Department not found"));
+
+        // Update the image only if a new one is provided
+        String imageUrl = device.getImageUrl(); // Retain the existing URL if no new image is provided
+        if (imageFile != null && !imageFile.isEmpty()) {
+            imageUrl = saveImage(imageFile);
+        }
+
+        // Update the device details
+        device.setName(deviceDto.getName());
+        device.setSerialNumber(deviceDto.getSerialNumber());
+        device.setDepartment(department);
+        device.setImageUrl(imageUrl);
+
         device = deviceRepository.save(device);
         return convertToDto(device);
     }
@@ -67,26 +107,24 @@ public class DeviceService {
                 device.getSerialNumber(),
                 Optional.ofNullable(device.getDepartment())
                         .map(Department::getId)
-                        .orElse(null)  // Correctly handling null case for department
+                        .orElse(null),
+                device.getImageUrl()
         );
     }
-    @Transactional
-public DeviceDto updateDevice(Long id, DeviceDto deviceDto) {
-    // Check if the device exists
-    Device device = deviceRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Device not found"));
 
-    // Check if the department exists
-    Department department = departmentRepository.findById(deviceDto.getDepartmentId())
-            .orElseThrow(() -> new RuntimeException("Department not found"));
-
-    // Update device fields
-    device.setName(deviceDto.getName());
-    device.setSerialNumber(deviceDto.getSerialNumber());
-    device.setDepartment(department);
-
-    // Save and return the updated device as DTO
-    device = deviceRepository.save(device);
-    return convertToDto(device);
-}
+    // Helper method to save image
+    private String saveImage(MultipartFile imageFile) {
+        try {
+            Path directoryPath = Paths.get(UPLOAD_DIR);
+            if (!Files.exists(directoryPath)) {
+                Files.createDirectories(directoryPath); // Create directory if it doesn't exist
+            }
+            String fileName = System.currentTimeMillis() + "_" + imageFile.getOriginalFilename();
+            Path filePath = directoryPath.resolve(fileName);
+            Files.write(filePath, imageFile.getBytes());
+            return fileName; // Return only the file name, not the full path
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to save image", e);
+        }
+    }
 }
