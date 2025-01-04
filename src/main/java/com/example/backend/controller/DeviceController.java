@@ -2,7 +2,6 @@ package com.example.backend.controller;
 
 import com.example.backend.dto.DeviceDto;
 import com.example.backend.service.DeviceService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,10 +11,11 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/devices")
 public class DeviceController {
-    private final DeviceService deviceService;
+
+    @Autowired
+    private DeviceService deviceService;
 
     @GetMapping
     public List<DeviceDto> getAllDevices() {
@@ -28,17 +28,19 @@ public class DeviceController {
     }
 
     @PostMapping
-    public ResponseEntity<DeviceDto> createDevice(@RequestBody DeviceDto deviceDto) {
-
-        if (deviceDto == null) {
-            throw new IllegalArgumentException("DeviceInfo cannot be null");
+    public ResponseEntity<DeviceDto> createDevice(
+        @RequestPart("device") DeviceDto deviceDto,
+        @RequestPart(value = "image", required = false) MultipartFile imageFile
+    ) {
+        if (deviceDto.getId() != null) {
+            throw new IllegalArgumentException("ID should not be provided during creation.");
         }
 
         if (deviceDto.getDepartmentId() == null) {
             throw new IllegalArgumentException("Department ID must be provided.");
         }
 
-        DeviceDto createdDevice = deviceService.createDevice(deviceDto);
+        DeviceDto createdDevice = deviceService.createDevice(deviceDto, imageFile);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdDevice);
     }
 
