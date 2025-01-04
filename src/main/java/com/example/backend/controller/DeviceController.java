@@ -27,11 +27,12 @@ public class DeviceController {
         return deviceService.getDeviceById(id);
     }
 
-    @PostMapping
+    @PostMapping()
     public ResponseEntity<DeviceDto> createDevice(
-        @RequestPart("device") DeviceDto deviceDto,
-        @RequestPart(value = "image", required = false) MultipartFile imageFile
+            @ModelAttribute DeviceDto deviceDto,
+            @RequestPart(value = "image", required = false) MultipartFile imageFile
     ) {
+        System.out.println(deviceDto.toString());
         if (deviceDto.getId() != null) {
             throw new IllegalArgumentException("ID should not be provided during creation.");
         }
