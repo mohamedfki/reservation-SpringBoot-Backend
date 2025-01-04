@@ -1,11 +1,12 @@
 package com.example.backend.service;
 
 import com.example.backend.dto.DeviceDto;
-import com.example.backend.entity.Device;
 import com.example.backend.entity.Department;
-import com.example.backend.repository.DeviceRepository;
+import com.example.backend.entity.Device;
+import com.example.backend.exceptions.DepartmentNotFoundException;
 import com.example.backend.repository.DepartmentRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.backend.repository.DeviceRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,26 +16,21 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
+
+@RequiredArgsConstructor
 @Service
 public class DeviceService {
-
     private static final String UPLOAD_DIR = "uploads/";
 
-    @Autowired
-    private DeviceRepository deviceRepository;
+    private final DeviceRepository deviceRepository;
 
-    @Autowired
-    private DepartmentRepository departmentRepository;
+    private final DepartmentRepository departmentRepository;
 
     // Get all devices
     public List<DeviceDto> getAllDevices() {
         List<Device> devices = deviceRepository.findAll();
-        return devices.stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+        return devices.stream().map(this::convertToDto).toList();
     }
 
     // Get device by ID
@@ -45,25 +41,15 @@ public class DeviceService {
     }
 
     @Transactional
-    // Create a new device
-    public DeviceDto createDevice(DeviceDto deviceDto, MultipartFile imageFile) {
-        // Check if the department exists
-        Department department = departmentRepository.findById(deviceDto.getDepartmentId())
-                .orElseThrow(() -> new RuntimeException("Department not found"));
-
-        // Save image if provided
-        String imageUrl = null;
-        if (imageFile != null && !imageFile.isEmpty()) {
-            imageUrl = saveImage(imageFile);
-        }
+    public DeviceDto createDevice(DeviceDto deviceDto) {
+        Department department = departmentRepository.findById(deviceDto.getDepartmentId()).orElseThrow(() -> new DepartmentNotFoundException("Department not found"));
 
         // Create and save the device
         Device device = new Device();
         device.setName(deviceDto.getName());
         device.setSerialNumber(deviceDto.getSerialNumber());
         device.setDepartment(department);
-        device.setImageUrl(imageUrl);
-
+        device.setImageUrl(deviceDto.getImageUrl());
         device = deviceRepository.save(device);
         return convertToDto(device);
     }
@@ -101,13 +87,7 @@ public class DeviceService {
 
     // Helper method to convert Device to DeviceDto
     private DeviceDto convertToDto(Device device) {
-        return new DeviceDto(
-                device.getId(),
-                device.getName(),
-                device.getSerialNumber(),
-                Optional.ofNullable(device.getDepartment())
-                        .map(Department::getId)
-                        .orElse(null),
+        return new DeviceDto(device.getName(), device.getSerialNumber(), device.getDepartment().getId(),
                 device.getImageUrl()
         );
     }
