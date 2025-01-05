@@ -48,8 +48,16 @@ public class DeviceService {
     // Create a new device
     public DeviceDto createDevice(DeviceDto deviceDto, MultipartFile imageFile) {
         // Check if the department exists
+
         Department department = departmentRepository.findById(deviceDto.getDepartmentId())
                 .orElseThrow(() -> new RuntimeException("Department not found"));
+
+
+        Optional<String> deviceSerial = deviceRepository.findSerialNumber(deviceDto.getSerialNumber()).orElse("null").describeConstable();
+
+        if (!deviceSerial.get().equals("null")) {
+            throw new RuntimeException("Serial number already exist");
+        }
 
         // Save image if provided
         String imageUrl = null;

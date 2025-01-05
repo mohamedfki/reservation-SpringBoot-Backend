@@ -6,7 +6,6 @@ import java.util.List;
 @Entity
 @Table(name = "Devices")
 public class Device {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
