@@ -4,6 +4,7 @@ import com.example.backend.dto.ReservationDto;
 import com.example.backend.entity.Device;
 import com.example.backend.entity.Reservation;
 import com.example.backend.entity.User;
+import com.example.backend.exceptions.ResourceNotFoundException;
 import com.example.backend.repository.DeviceRepository;
 import com.example.backend.repository.ReservationRepository;
 import com.example.backend.repository.UserRepository;
@@ -38,6 +39,23 @@ public class ReservationService {
         return mapToDto(reservation);
     }
 
+    public List<ReservationDto> getReservationsByUserId(Long userId) {
+        List<Reservation> reservations = reservationRepository.findByUserId(userId);
+        return reservations.stream().map(this::mapToDto).collect(Collectors.toList());
+    }
+
+    public ReservationDto getAndUpdateReservation(Long id) throws ResourceNotFoundException {
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Reservation not found for id: " + id));
+
+        // Update status to "reserved" if it is not already set
+        if (!"reserved".equals(reservation.getStatus())) {
+            reservation.setStatus("reserved");
+            reservationRepository.save(reservation);
+        }
+
+        return mapToDto(reservation);
+    }
     @Transactional
     public ReservationDto createReservation(ReservationDto reservationDto) {
         // Fetch the user and device
@@ -57,7 +75,7 @@ public class ReservationService {
         }
 
         // Create the reservation
-        Reservation reservation = new Reservation(user, device, startDate, endDate);
+        Reservation reservation = new Reservation(user, device, startDate, endDate, "wait");
         reservation = reservationRepository.save(reservation);
         return mapToDto(reservation);
     }
@@ -85,7 +103,8 @@ public class ReservationService {
                 reservation.getUser().getId(),
                 reservation.getDevice().getId(),
                 reservation.getStartDate(),
-                reservation.getEndDate()
+                reservation.getEndDate(),
+                reservation.getStatus()
         );
     }
     @Transactional

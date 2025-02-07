@@ -48,7 +48,7 @@ public class DeviceController {
     @PutMapping("/{id}")
     public ResponseEntity<DeviceDto> updateDevice(
         @PathVariable Long id,
-        @RequestPart("device") DeviceDto deviceDto,
+        @ModelAttribute DeviceDto deviceDto,
         @RequestPart(value = "image", required = false) MultipartFile imageFile
     ) {
         DeviceDto updatedDevice = deviceService.updateDevice(id, deviceDto, imageFile);

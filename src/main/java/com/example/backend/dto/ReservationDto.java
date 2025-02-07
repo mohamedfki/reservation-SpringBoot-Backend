@@ -9,23 +9,25 @@ public class ReservationDto {
     private Long userId;
     private Long deviceId;
 
-    // Using correct pattern for LocalDateTime
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime startDate;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime endDate;
 
+    private String status ;
+
     // Constructors
     public ReservationDto() {
     }
 
-    public ReservationDto(Long id, Long userId, Long deviceId, LocalDateTime startDate, LocalDateTime endDate) {
+    public ReservationDto(Long id, Long userId, Long deviceId, LocalDateTime startDate, LocalDateTime endDate, String status) {
         this.id = id;
         this.userId = userId;
         this.deviceId = deviceId;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.status = status;
     }
 
     // Getters and Setters
@@ -67,5 +69,13 @@ public class ReservationDto {
 
     public void setEndDate(LocalDateTime endDate) {
         this.endDate = endDate;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

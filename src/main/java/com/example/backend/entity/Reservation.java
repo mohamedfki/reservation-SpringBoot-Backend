@@ -24,16 +24,18 @@ public class Reservation {
 
     @Column(nullable = false)
     private LocalDateTime endDate;
-
+    @Column(nullable = false)
+    private String status ;
     // Constructors
     public Reservation() {
     }
 
-    public Reservation(User user, Device device, LocalDateTime startDate, LocalDateTime endDate) {
+    public Reservation(User user, Device device, LocalDateTime startDate, LocalDateTime endDate, String status) {
         this.user = user;
         this.device = device;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.status = status;
     }
 
     // Getters and Setters
@@ -75,6 +77,13 @@ public class Reservation {
 
     public void setEndDate(LocalDateTime endDate) {
         this.endDate = endDate;
+    }
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }
 

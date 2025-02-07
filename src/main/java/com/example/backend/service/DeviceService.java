@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @Service
 public class DeviceService {
 
-    private static final String UPLOAD_DIR = "uploads/";
+    private static final String UPLOAD_DIR = "src/main/resources/static/uploads/";
 
     @Autowired
     private DeviceRepository deviceRepository;
